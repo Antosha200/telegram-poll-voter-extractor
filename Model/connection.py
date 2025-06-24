@@ -25,7 +25,7 @@ async def test_connection():
 
         if not await client.is_user_authorized():
             # Шаг 1: отправляем код на телефон
-            phone = input("Введите ваш номер телефона (в формате +7…): ")
+            phone = input("Введите ваш номер телефона")
             await client.send_code_request(phone)
             code = input("Введите код, полученный в Telegram: ")
 
@@ -39,6 +39,7 @@ async def test_connection():
 
         me = await client.get_me()
         print(f"Успешно подключились как {me.first_name} (@{me.username}), id={me.id}")
+        print("Не рекомендуется подключаться много раз. Телеграмм может заблокировать аккаунт.")
     except RPCError as e:
         print("Ошибка Telethon RPC:", e)
     except Exception as e:
