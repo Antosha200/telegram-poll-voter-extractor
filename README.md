@@ -61,10 +61,9 @@ Private group (invite-only): https://t.me/+HoysWf3C7BU3ZjZk
 You must be a member of the group and have permission to read messages in it.
 
 ## 📎 Useful Links
-🔑 my.telegram.org — Get API ID and Hash
 
-📘 Telethon Documentation
+- [🔑 my.telegram.org — Get API ID and Hash](https://my.telegram.org)
+- [📘 Telethon Documentation](https://docs.telethon.dev/)
+- [💬 Example Telegram Chat (Public)](https://t.me/mychatgroup)
+- [🔒 Example Telegram Invite Link (Private)](https://t.me/+HoysWf3C7BU3ZjZk)
 
-💬 Example Telegram Chat (Public)
-
-🔒 Example Telegram Invite Link (Private)
