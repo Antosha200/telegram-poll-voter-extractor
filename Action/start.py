@@ -10,6 +10,22 @@ def main():
     start_conn = os.path.join(model_dir, 'startConnect.py')
     get_poll   = os.path.join(model_dir, 'getPoll.py')
 
+    #Checking dependencies and installing
+    dep_checker = os.path.join(here, 'check_dependencies.py')
+    try:
+        subprocess.run([sys.executable, dep_checker], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to verify or install dependencies: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # Checking config file and values
+    config_checker = os.path.join(here, 'check_config.py')
+    try:
+        subprocess.run([sys.executable, config_checker], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Configuration error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     # 1) Если сессии нет — запускаем startConnect.py
     if not os.path.exists(session_fp):
         print("Session not found — connection attempt...")
