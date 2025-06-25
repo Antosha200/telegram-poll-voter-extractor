@@ -1,16 +1,10 @@
 import asyncio
-import os
-from telethon import TelegramClient
 from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest
-from Model.config import load_config
+from Model.connection import get_client, cfg
 
-cfg = load_config()
-SESSION_PATH = os.path.join(os.path.dirname(__file__), cfg['session_name'])
-client = TelegramClient(SESSION_PATH, cfg['api_id'], cfg['api_hash'])
+client = get_client()
 
-#TODO: добавить поддержку нескольких ответов ()
-#TODO: создать requirements.txt откуда будут устанавливаться зависимости (+добавить это в Readme.md)
 async def fetch_last_poll():
     await client.start()
     async for msg in client.iter_messages(cfg['chat_username'], limit=200):

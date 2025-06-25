@@ -5,16 +5,24 @@ from telethon.errors import SessionPasswordNeededError, RPCError
 from config import load_config
 
 cfg = load_config()
+_FORCED_SESSION_PATH: str = None
 
 def get_client() -> TelegramClient:
     """
     Creates and returns an instance of TelegramClient (without automatic connect()).
     """
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    SESSION_PATH = os.path.join(BASE_DIR, cfg['session_name'])
+    # если путь был "принудительно" установлен — используем его
+
+    if _FORCED_SESSION_PATH:
+            session_fp = _FORCED_SESSION_PATH
+    else:
+            here = os.path.dirname(os.path.abspath(__file__))
+            root_dir = os.path.normpath(os.path.join(here, '..'))
+            session_dir = os.path.join(root_dir, 'Session')
+            session_fp = os.path.join(session_dir, f"{cfg['session_name']}.session")
 
     return TelegramClient(
-        SESSION_PATH,
+        session_fp,
         cfg['api_id'],
         cfg['api_hash']
     )
@@ -56,3 +64,7 @@ def run_test():
     Synchronous start of asynchronous verification.
     """
     asyncio.run(test_connection())
+
+def set_session_path(path: str):
+    global _FORCED_SESSION_PATH
+    _FORCED_SESSION_PATH = path

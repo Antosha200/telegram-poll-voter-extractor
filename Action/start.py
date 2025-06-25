@@ -4,9 +4,22 @@ import sys
 import subprocess
 
 def main():
-    here       = os.path.dirname(os.path.abspath(__file__))
+    here = os.path.dirname(os.path.abspath(__file__))
+
+    session_checker = os.path.join(here, 'check_session.py')
+    try:
+        result = subprocess.run(
+            [sys.executable, session_checker],
+            check=True,
+            stdout=subprocess.PIPE,
+            universal_newlines=True
+        )
+        session_fp = result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Session setup error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     model_dir  = os.path.normpath(os.path.join(here, '..', 'Model'))
-    session_fp = os.path.join(model_dir, 'poll_session.session')
     start_conn = os.path.join(model_dir, 'startConnect.py')
     get_poll   = os.path.join(model_dir, 'getPoll.py')
 
@@ -26,12 +39,12 @@ def main():
         print(f"Configuration error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # 1) Если сессии нет — запускаем startConnect.py
+    # 1) Если сессии нет — запускаем startConnect.py и передаём ему полный путь
     if not os.path.exists(session_fp):
         print("Session not found — connection attempt...")
         try:
             subprocess.run(
-                [sys.executable, start_conn],
+                [sys.executable, start_conn, session_fp],
                 check=True
             )
         except subprocess.CalledProcessError as e:
