@@ -32,7 +32,7 @@ This is a Python-based system that:
 
 ---
 
-##🔑 Where to Get API Credentials?
+## 🔑 Where to Get API Credentials?
 You can obtain your api_id and api_hash from my.telegram.org:
 
  - Go to https://my.telegram.org
@@ -49,7 +49,7 @@ You can obtain your api_id and api_hash from my.telegram.org:
 
 ---
 
-##🧭 What is `chat_username`?
+## 🧭 What is `chat_username`?
 This should be the public or private invite link to the chat (group/channel) where the poll is posted.
 
 Examples:
@@ -60,7 +60,7 @@ Private group (invite-only): https://t.me/+HoysWf3C7BU3ZjZk
 
 You must be a member of the group and have permission to read messages in it.
 
-##📎 Useful Links
+## 📎 Useful Links
 🔑 my.telegram.org — Get API ID and Hash
 
 📘 Telethon Documentation
