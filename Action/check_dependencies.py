@@ -5,7 +5,6 @@ import subprocess
 import sys
 import os
 
-
 def load_dependencies(cfg_path):
     config = configparser.ConfigParser()
     config.read(cfg_path)
@@ -16,7 +15,6 @@ def load_dependencies(cfg_path):
         print("No dependencies or packages found in config.")
         return []
 
-
 def ensure_package_installed(package_name):
     try:
         importlib.import_module(package_name)
@@ -25,7 +23,6 @@ def ensure_package_installed(package_name):
         print(f"📦 '{package_name}' not found. Installing...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
         print(f"✅ '{package_name}' installed successfully.")
-
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +35,6 @@ def main():
     packages = load_dependencies(cfg_file)
     for pkg in packages:
         ensure_package_installed(pkg)
-
 
 if __name__ == "__main__":
     main()
