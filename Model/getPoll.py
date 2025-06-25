@@ -23,12 +23,11 @@ async def fetch_voters_for_option(msg, option_bytes: bytes):
                 limit=100
             ))
         except Exception as e:
-            print(f"Ошибка при получении голосующих: {e}")
+            print(f"Error receiving votes: {e}")
             break
 
         voters.extend(result.users)
 
-        # если нет следующего оффсета — выходим
         if not result.next_offset:
             break
 
@@ -37,14 +36,14 @@ async def fetch_voters_for_option(msg, option_bytes: bytes):
 async def main():
     msg = await fetch_last_poll()
     if not msg:
-        print("В чате не найдено ни одного опроса.")
+        print("Not a single poll was found in the chat.")
         return
 
     poll = msg.media.poll
     results = msg.media.results
 
     if not poll.public_voters:
-        print("❌ Опрос не является публичным — нельзя получить имена голосовавших.")
+        print("❌ The poll is not public — you cannot get the names of those who voted..")
         return
 
     question = getattr(poll.question, 'text', str(poll.question))
@@ -55,7 +54,7 @@ async def main():
         ans_text = getattr(answer.text, 'text', str(answer.text))
         raw_opt  = answer.option
 
-        # Упаковываем в "сырые" байты только если это int
+        # Packing it into "raw" bytes only if it is an int.
         if isinstance(raw_opt, int):
             option_bytes = bytes([raw_opt])
         elif isinstance(raw_opt, (bytes, bytearray)):
@@ -63,7 +62,7 @@ async def main():
         else:
             raise TypeError(f"Неподдерживаемый тип answer.option: {type(raw_opt)}")
 
-        # Демонстрируем, что действительно передаём правильные байты
+        ########
         print(f"🔹 {ans_text}")
 
         voters = await fetch_voters_for_option(msg, option_bytes)
