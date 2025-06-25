@@ -1,4 +1,5 @@
 import asyncio
+import os
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError, RPCError
 from config import load_config
@@ -9,8 +10,11 @@ def get_client() -> TelegramClient:
     """
     Creates and returns an instance of TelegramClient (without automatic connect()).
     """
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    SESSION_PATH = os.path.join(BASE_DIR, cfg['session_name'])
+
     return TelegramClient(
-        cfg['session_name'],
+        SESSION_PATH,
         cfg['api_id'],
         cfg['api_hash']
     )
