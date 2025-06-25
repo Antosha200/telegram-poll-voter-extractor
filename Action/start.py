@@ -27,6 +27,8 @@ def main():
         # запускаем getPoll.py
         print("Active session, no new connection required")
         try:
+            #здесь используем процессы для текущей системы
+            #позже процессы будут перенесены по иерархии выше
             subprocess.run(
                 [sys.executable, get_poll],
                 check=True
