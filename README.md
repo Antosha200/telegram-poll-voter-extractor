@@ -28,6 +28,7 @@ This is a Python-based system that:
   "chat_username": "https://t.me/your_group_or_channel", 
   "session_name": "Model/poll_session"
 }
+```
 
 🔑 Where to Get API Credentials?
 You can obtain your api_id and api_hash from my.telegram.org:
