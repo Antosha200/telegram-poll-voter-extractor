@@ -14,61 +14,53 @@ async def fetch_last_poll():
 
 async def fetch_voters_for_option(msg, option_bytes: bytes):
     voters = []
+    offset = b''
     while True:
         try:
             result = await client(GetPollVotesRequest(
                 peer=msg.peer_id,
                 id=msg.id,
                 option=option_bytes,
-                limit=100
+                limit=100,
+                offset=offset
             ))
         except Exception as e:
             print(f"Error receiving votes: {e}")
             break
 
         voters.extend(result.users)
-
         if not result.next_offset:
             break
+        offset = result.next_offset
 
     return voters
 
 async def main():
     msg = await fetch_last_poll()
     if not msg:
-        print("Not a single poll was found in the chat.")
+        print("No polls found in chat.")
         return
 
     poll = msg.media.poll
-    results = msg.media.results
-
     if not poll.public_voters:
-        print("❌ The poll is not public — you cannot get the names of those who voted..")
+        print("❌ The poll is not public — you cannot get a list of those who voted.")
         return
 
-    question = getattr(poll.question, 'text', str(poll.question))
     print(f"\n{msg.date:%Y-%m-%d %H:%M:%S}")
-    print(f"\n {question}\n")
+    question = poll.question.text if hasattr(poll.question, 'text') else poll.question
+    print(f"\n{question}\n")
 
-    for answer, poll_result in zip(poll.answers, results.results):
-        ans_text = getattr(answer.text, 'text', str(answer.text))
-        raw_opt  = answer.option
-
-        # Packing it into "raw" bytes only if it is an int.
-        if isinstance(raw_opt, int):
-            option_bytes = bytes([raw_opt])
-        elif isinstance(raw_opt, (bytes, bytearray)):
-            option_bytes = raw_opt
+    for answer in poll.answers:
+        ans_text = answer.text.text if hasattr(answer.text, 'text') else answer.text
+        raw = answer.option
+        if isinstance(raw, int):
+            option_bytes = bytes([raw])
         else:
-            raise TypeError(f"Неподдерживаемый тип answer.option: {type(raw_opt)}")
-
-        ########
-        print(f"🔹 {ans_text}")
+            option_bytes = raw
 
         voters = await fetch_voters_for_option(msg, option_bytes)
-        if not voters:
-            print("")
-            continue
+
+        print(f"🔹 {ans_text}: {len(voters)} голос{'ов' if len(voters)%10!=1 or len(voters)%100==11 else ''}")
 
         for user in voters:
             name = f"{user.first_name or ''} {user.last_name or ''}".strip()
