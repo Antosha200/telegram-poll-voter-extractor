@@ -1,5 +1,5 @@
 
-# TG_CHOIR — Telegram Poll Voter Extractor
+# Telegram Poll Voter Extractor
 
 This is a Python-based system that:
 
