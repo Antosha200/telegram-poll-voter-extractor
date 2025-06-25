@@ -1,7 +1,7 @@
 import asyncio
 from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest
-from Model.connection import get_client, cfg
+from connection import get_client, cfg
 
 client = get_client()
 
