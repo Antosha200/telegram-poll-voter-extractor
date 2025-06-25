@@ -29,6 +29,7 @@ This is a Python-based system that:
   "session_name": "Model/poll_session"
 }
 ```
+
 ---
 
 ##🔑 Where to Get API Credentials?
@@ -48,7 +49,7 @@ You can obtain your api_id and api_hash from my.telegram.org:
 
 ---
 
-##🧭 What is chat_username?
+##🧭 What is `chat_username`?
 This should be the public or private invite link to the chat (group/channel) where the poll is posted.
 
 Examples:
