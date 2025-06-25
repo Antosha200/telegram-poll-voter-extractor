@@ -19,9 +19,7 @@ def validate_config(config):
     return missing
 
 def main():
-    # Папка, где находится этот скрипт (Action)
     here = os.path.dirname(os.path.abspath(__file__))
-    # Корень проекта — на уровень выше
     root_dir = os.path.normpath(os.path.join(here, '..'))
     config_path = os.path.join(root_dir, "config.json")
 
