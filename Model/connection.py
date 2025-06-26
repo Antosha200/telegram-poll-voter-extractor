@@ -3,6 +3,7 @@ import os
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError, RPCError
 from config import load_config
+from Model.Logger.logger import logger
 
 cfg = load_config()
 _FORCED_SESSION_PATH: str = None
