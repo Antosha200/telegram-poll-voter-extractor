@@ -65,6 +65,8 @@ async def main():
     me = await client.get_me()
 
     # Voting for the first option
+    # TODO: добавить проверку (на случай если этот аккаунт уже голосовал и не требуется голосовать/отменять голос)
+    # TODO: Сейчас удаляются все голоса текущего аккаунта
     first_option = poll.answers[0].option
     if isinstance(first_option, int):
         first_option_bytes = bytes([first_option])
@@ -114,6 +116,7 @@ async def main():
         options=[]
     ))
 
+    # TODO: Добавить чтобы файл перезаписывался каждый раз при создании
     saver = PollSaver()
     saved_path = saver.save_as_json(poll_date, poll_data, subfolder="Polls")
     logger.info(f"Poll results saved to: {saved_path}")
