@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime
 
-
 class PollSaver:
     def __init__(self, base_dir=None):
         self.project_root = os.path.abspath(
