@@ -1,11 +1,23 @@
 import asyncio
+import re
+from logging import Logger
 from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest, SendVoteRequest
-from telethon.errors import UserNotParticipantError
 from connection import get_client, cfg
+from Model.Saver.saver import PollSaver
 from Model.Logger.logger import logger
 
 client = get_client()
+
+def sanitize_key(key: str) -> str:
+    """
+    Converts the text of the response option to a secure key for JSON
+    :param key: Text of the response option
+    :return: Secure key
+    """
+    sanitized = re.sub(r'[^\w]', '_', key)
+    sanitized = re.sub(r'_+', '_', sanitized)
+    return sanitized.strip('_')
 
 async def fetch_last_poll():
     await client.start()
@@ -47,15 +59,12 @@ async def main():
         logger.error("The poll is not public — you cannot get a list of those who voted.")
         return
 
-    print(f"\n{msg.date:%Y-%m-%d %H:%M:%S}")
+    poll_date = msg.date
     question = poll.question.text if hasattr(poll.question, 'text') else poll.question
-    print(f"\n{question}\n")
 
-    # Getting information about ourselves for filtering
     me = await client.get_me()
 
-    # voting for the first option using the account used by this application.
-    # It is impossible to get the names of those who voted without using their own voice.
+    # Voting for the first option
     first_option = poll.answers[0].option
     if isinstance(first_option, int):
         first_option_bytes = bytes([first_option])
@@ -68,11 +77,13 @@ async def main():
         options=[first_option_bytes]
     ))
 
-    # Waiting for voice processing
     await asyncio.sleep(1)
 
-    # collecting data on all options
-    all_results = []
+    poll_data = {
+        "date": poll_date.isoformat(),
+        "question": question,
+    }
+
     for answer in poll.answers:
         ans_text = answer.text.text if hasattr(answer.text, 'text') else answer.text
         raw = answer.option
@@ -83,20 +94,38 @@ async def main():
 
         voters = await fetch_voters_for_option(msg, option_bytes)
         filtered_voters = [user for user in voters if user.id != me.id]
-        all_results.append((ans_text, filtered_voters))
 
-    # Canceling the vote
+        voter_names = []
+        for u in filtered_voters:
+            name = f"{u.first_name or ''} {u.last_name or ''}".strip()
+            display = name or (f"@{u.username}" if u.username else f"(ID: {u.id})")
+            voter_names.append(display)
+
+        option_key = sanitize_key(ans_text)
+
+        poll_data[option_key] = {
+            "voter_counts": len(filtered_voters),
+            "voter_names": voter_names
+        }
+
     await client(SendVoteRequest(
         peer=msg.peer_id,
         msg_id=msg.id,
         options=[]
     ))
 
-    # Displaying the results
-    for ans_text, voters in all_results:
-        vote_count = len(voters)
+    saver = PollSaver()
+    saved_path = saver.save_as_json(poll_date, poll_data, subfolder="Polls")
+    logger.info(f"Poll results saved to: {saved_path}")
 
-        # TODO:Make logger to enter existing poll in needed format
+    print(f"\n{poll_date:%Y-%m-%d %H:%M:%S}")
+    print(f"\n{question}\n")
+
+    for option_key, data in poll_data.items():
+        if option_key in ["date", "question"]:
+            continue
+
+        vote_count = data["voter_counts"]
         if vote_count % 10 == 1 and vote_count % 100 != 11:
             vote_text = "голос"
         elif 2 <= vote_count % 10 <= 4 and not (12 <= vote_count % 100 <= 14):
@@ -104,12 +133,16 @@ async def main():
         else:
             vote_text = "голосов"
 
-        print(f"🔹 {ans_text}: {vote_count} {vote_text}")
+        original_text = next(
+            (ans.text.text if hasattr(ans.text, 'text') else ans.text
+             for ans in poll.answers
+             if sanitize_key(ans.text.text if hasattr(ans.text, 'text') else ans.text) == option_key),
+            option_key  # fallback
+        )
 
-        for user in voters:
-            name = f"{user.first_name or ''} {user.last_name or ''}".strip()
-            display = name or (f"@{user.username}" if user.username else f"(ID: {user.id})")
-            print(f"   • {display}")
+        print(f"🔹 {original_text}: {vote_count} {vote_text}")
+        for name in data["voter_names"]:
+            print(f"   • {name}")
         print()
 
 if __name__ == '__main__':
