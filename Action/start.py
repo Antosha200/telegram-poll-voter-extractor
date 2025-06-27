@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from Model.Logger.logger import logger
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +16,7 @@ def main():
         )
         session_fp = result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Session setup error: {e}", file=sys.stderr)
+        logger.error(f"Session setup error: {e}", file=sys.stderr)
         sys.exit(1)
 
     model_dir  = os.path.normpath(os.path.join(here, '..', 'Model'))
@@ -27,7 +28,7 @@ def main():
     try:
         subprocess.run([sys.executable, dep_checker], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Failed to verify or install dependencies: {e}", file=sys.stderr)
+        logger.error(f"Failed to verify or install dependencies: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Checking config file and values
@@ -35,32 +36,32 @@ def main():
     try:
         subprocess.run([sys.executable, config_checker], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Configuration error: {e}", file=sys.stderr)
+        logger.error(f"Configuration error: {e}", file=sys.stderr)
         sys.exit(1)
 
     # If there is no session, launching startConnect.py and give him the full path.
     if not os.path.exists(session_fp):
-        print("Session not found — connection attempt...")
+        logger.info("Session not found — connection attempt...")
         try:
             subprocess.run(
                 [sys.executable, start_conn, session_fp],
                 check=True
             )
         except subprocess.CalledProcessError as e:
-            print(f"Connection error: {e}", file=sys.stderr)
+            logger.error(f"Connection error: {e}", file=sys.stderr)
             sys.exit(1)
 
     #
     if os.path.exists(session_fp):
         # starting getPoll.py
-        print("Active session, no new connection required")
+        logger.info("Active session, no new connection required")
         try:
             subprocess.run(
                 [sys.executable, get_poll],
                 check=True
             )
         except subprocess.CalledProcessError as e:
-            print(f"Error when receiving the poll: {e}", file=sys.stderr)
+            logger.error(f"Error when receiving the poll: {e}", file=sys.stderr)
             sys.exit(1)
     else:
         # if there is still no session -> fatal error

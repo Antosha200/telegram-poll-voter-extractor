@@ -3,6 +3,7 @@ from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest, SendVoteRequest
 from telethon.errors import UserNotParticipantError
 from connection import get_client, cfg
+from Model.Logger.logger import logger
 
 client = get_client()
 
@@ -26,7 +27,7 @@ async def fetch_voters_for_option(msg, option_bytes: bytes):
                 offset=offset
             ))
         except Exception as e:
-            print(f"Error receiving votes: {e}")
+            logger.error(f"Error receiving votes: {e}")
             break
 
         voters.extend(result.users)
@@ -38,12 +39,12 @@ async def fetch_voters_for_option(msg, option_bytes: bytes):
 async def main():
     msg = await fetch_last_poll()
     if not msg:
-        print("No polls found in chat.")
+        logger.error("No polls found in chat.")
         return
 
     poll = msg.media.poll
     if not poll.public_voters:
-        print("❌ The poll is not public — you cannot get a list of those who voted.")
+        logger.error("The poll is not public — you cannot get a list of those who voted.")
         return
 
     print(f"\n{msg.date:%Y-%m-%d %H:%M:%S}")
