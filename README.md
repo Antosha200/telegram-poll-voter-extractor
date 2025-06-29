@@ -76,7 +76,7 @@ cd Action
 ```bash
 python start.py
 ```
-2. Running with the `msg_id` paremeter. Will return the poll that has actual message id
+2. Running with the `msg_id` parameter. Will return the poll that has actual message id
 ```bash
 cd Action
 ```
