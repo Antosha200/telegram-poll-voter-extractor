@@ -1,6 +1,5 @@
 import asyncio
 import re
-from logging import Logger
 from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest, SendVoteRequest
 from connection import get_client, cfg
@@ -48,6 +47,33 @@ async def fetch_voters_for_option(msg, option_bytes: bytes):
         offset = result.next_offset
     return voters
 
+async def has_user_voted(msg, user_id: int) -> bool:
+    """Check if user has already voted in the poll"""
+    try:
+        # Checking first option to see if user has voted
+        first_option = msg.media.poll.answers[0].option
+        if isinstance(first_option, int):
+            first_option_bytes = bytes([first_option])
+        else:
+            first_option_bytes = first_option
+
+        voters = await fetch_voters_for_option(msg, first_option_bytes)
+        if any(voter.id == user_id for voter in voters):
+            return True
+
+        # Check other options if needed
+        for answer in msg.media.poll.answers[1:]:
+            raw = answer.option
+            option_bytes = bytes([raw]) if isinstance(raw, int) else raw
+            voters = await fetch_voters_for_option(msg, option_bytes)
+            if any(voter.id == user_id for voter in voters):
+                return True
+
+        return False
+    except Exception as e:
+        logger.error(f"Error checking user vote: {e}")
+        return False
+
 async def main():
     msg = await fetch_last_poll()
     if not msg:
@@ -63,23 +89,23 @@ async def main():
     question = poll.question.text if hasattr(poll.question, 'text') else poll.question
 
     me = await client.get_me()
+    need_to_vote = not await has_user_voted(msg, me.id)
 
-    # Voting for the first option
-    # TODO: добавить проверку (на случай если этот аккаунт уже голосовал и не требуется голосовать/отменять голос)
-    # TODO: Сейчас удаляются все голоса текущего аккаунта
-    first_option = poll.answers[0].option
-    if isinstance(first_option, int):
-        first_option_bytes = bytes([first_option])
-    else:
-        first_option_bytes = first_option
+    # Voting logic
+    if need_to_vote:
+        first_option = poll.answers[0].option
+        if isinstance(first_option, int):
+            first_option_bytes = bytes([first_option])
+        else:
+            first_option_bytes = first_option
 
-    await client(SendVoteRequest(
-        peer=msg.peer_id,
-        msg_id=msg.id,
-        options=[first_option_bytes]
-    ))
-
-    await asyncio.sleep(1)
+        await client(SendVoteRequest(
+            peer=msg.peer_id,
+            msg_id=msg.id,
+            options=[first_option_bytes]
+        ))
+        logger.info("Temporarily voted to access poll results")
+        await asyncio.sleep(1)
 
     poll_data = {
         "date": poll_date.isoformat(),
@@ -95,7 +121,7 @@ async def main():
             option_bytes = raw
 
         voters = await fetch_voters_for_option(msg, option_bytes)
-        filtered_voters = [user for user in voters if user.id != me.id]
+        filtered_voters = [user for user in voters if user.id != me.id or not need_to_vote]
 
         voter_names = []
         for u in filtered_voters:
@@ -110,13 +136,14 @@ async def main():
             "voter_names": voter_names
         }
 
-    await client(SendVoteRequest(
-        peer=msg.peer_id,
-        msg_id=msg.id,
-        options=[]
-    ))
+    if need_to_vote:
+        await client(SendVoteRequest(
+            peer=msg.peer_id,
+            msg_id=msg.id,
+            options=[]
+        ))
+        logger.info("Temporary vote removed")
 
-    # TODO: Добавить чтобы файл перезаписывался каждый раз при создании
     saver = PollSaver()
     saved_path = saver.save_as_json(poll_date, poll_data, subfolder="Polls")
     logger.info(f"Poll results saved to: {saved_path}")
