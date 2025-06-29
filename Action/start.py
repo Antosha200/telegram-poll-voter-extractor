@@ -1,12 +1,20 @@
 import os
 import sys
 import subprocess
+import argparse
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.insert(0, project_root)
+
 from Model.Logger.logger import logger
 
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
-
     session_checker = os.path.join(here, 'check_session.py')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--msg_id', type=int, help='ID of the poll message to fetch')
+    args = parser.parse_args()
     try:
         result = subprocess.run(
             [sys.executable, session_checker],
@@ -53,13 +61,13 @@ def main():
 
     #
     if os.path.exists(session_fp):
-        # starting getPoll.py
         logger.info("Active session, no new connection required")
         try:
-            subprocess.run(
-                [sys.executable, get_poll],
-                check=True
-            )
+            cmd = [sys.executable, get_poll]
+            if args.msg_id:
+                cmd.extend(['--msg_id', str(args.msg_id)])
+
+            subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             logger.error(f"Error when receiving the poll: {e}", file=sys.stderr)
             sys.exit(1)
