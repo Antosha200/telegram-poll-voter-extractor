@@ -1,10 +1,18 @@
 import asyncio
 import re
+import argparse
+import os
+import sys
 from telethon.tl.types import MessageMediaPoll
 from telethon.tl.functions.messages import GetPollVotesRequest, SendVoteRequest
-from connection import get_client, cfg
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.insert(0, project_root)
+
 from Model.Saver.saver import PollSaver
 from Model.Logger.logger import logger
+from connection import get_client, cfg
 
 client = get_client()
 
@@ -24,6 +32,26 @@ async def fetch_last_poll():
         if isinstance(msg.media, MessageMediaPoll):
             return msg
     return None
+
+async def fetch_poll_by_id(msg_id: int):
+    """
+    Receives a survey based on the specified message ID
+    :param msg_id: ID of the polling message
+    :return: Message object or None
+    """
+    await client.start()
+    try:
+        msg = await client.get_messages(
+            entity=cfg['chat_username'],
+            ids=msg_id
+        )
+        if msg and isinstance(msg.media, MessageMediaPoll):
+            return msg
+        logger.error(f"Message with ID {msg_id} is not a poll or not found")
+        return None
+    except Exception as e:
+        logger.error(f"Error fetching message by ID: {e}")
+        return None
 
 async def fetch_voters_for_option(msg, option_bytes: bytes):
     voters = []
@@ -75,6 +103,23 @@ async def has_user_voted(msg, user_id: int) -> bool:
         return False
 
 async def main():
+    # Command line argument parsing
+    parser = argparse.ArgumentParser(description='Fetch Telegram polls')
+    parser.add_argument('--msg_id', type=int, help='ID of the poll message to fetch')
+    args = parser.parse_args()
+
+    # Receiving a survey depending on the arguments passed
+    if args.msg_id:
+        logger.info(f"Fetching poll by message ID: {args.msg_id}")
+        msg = await fetch_poll_by_id(args.msg_id)
+    else:
+        logger.info("Fetching last poll in chat")
+        msg = await fetch_last_poll()
+
+    if not msg:
+        logger.error("No polls found in chat.")
+        return
+
     msg = await fetch_last_poll()
     if not msg:
         logger.error("No polls found in chat.")
