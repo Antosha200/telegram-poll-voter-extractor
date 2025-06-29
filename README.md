@@ -89,5 +89,5 @@ https://web.telegram.org/k/#-1234567890
 ```
 
 ## 🎯 Where to find the results?
-All results you can find in `Documents/Results` folder in JSON format
+All results you can find in `Documents/Results` folder in JSON format.
 You also can find logs in `Logs` folder
