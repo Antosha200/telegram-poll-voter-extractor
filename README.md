@@ -67,3 +67,27 @@ You must be a member of the group and have permission to read messages in it.
 - [💬 Example Telegram Chat (Public)](https://t.me/mychatgroup)
 - [🔒 Example Telegram Invite Link (Private)](https://t.me/+HoysWf3C7BU3ZjZk)
 
+## 👾 How to run with console?
+At the moment, there are two launch options:
+1. Running without setting parameters. It will return the last poll in the chat.
+```bash
+cd Action
+```
+```bash
+python start.py
+```
+2. Running with the `msg_id` paremeter. Will return the poll that has actual message id
+```bash
+cd Action
+```
+```bash
+python start.py --msg_id 789012
+```
+Find which id to use you can from Telegram web URL
+```bash
+https://web.telegram.org/k/#-1234567890
+```
+
+## 🎯 Where to find the results?
+All results you can find in `Documents/Results` folder in JSON format
+You also can find logs in `Logs` folder
