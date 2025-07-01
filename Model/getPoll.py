@@ -32,18 +32,18 @@ async def fetch_last_poll():
         if isinstance(msg.media, MessageMediaPoll):
             return msg
     return None
-
+"""
 async def fetch_poll_by_id(msg_id: int):
-    """
+    
     Receives a survey based on the specified message ID
     :param msg_id: ID of the polling message
     :return: Message object or None
-    """
+    
     await client.start()
     try:
         msg = await client.get_messages(
             entity=cfg['chat_username'],
-            ids=msg_id
+            ids=msg_id,
         )
         if msg and isinstance(msg.media, MessageMediaPoll):
             return msg
@@ -51,6 +51,29 @@ async def fetch_poll_by_id(msg_id: int):
         return None
     except Exception as e:
         logger.error(f"Error fetching message by ID: {e}")
+        return None
+"""
+async def fetch_poll_by_poll_id(poll_id: int):
+    """
+    Получает опрос по уникальному poll_id вместо message_id
+    :param poll_id: ID опроса (поле poll.id в MessageMediaPoll)
+    :return: Message объект или None
+    """
+    await client.start()
+    try:
+        async for msg in client.iter_messages(
+                entity=cfg['chat_username'],
+                limit=200  # Ограничение на количество проверяемых сообщений
+        ):
+            if (
+                    isinstance(msg.media, MessageMediaPoll) and
+                    msg.media.poll.id == poll_id
+            ):
+                return msg
+        logger.warning(f"Poll with ID {poll_id} not found in the last 200 messages")
+        return None
+    except Exception as e:
+        logger.error(f"Error fetching poll by ID: {e}")
         return None
 
 async def fetch_voters_for_option(msg, option_bytes: bytes):
@@ -105,36 +128,28 @@ async def has_user_voted(msg, user_id: int) -> bool:
 async def main():
     # Command line argument parsing
     parser = argparse.ArgumentParser(description='Fetch Telegram polls')
-    parser.add_argument('--msg_id', type=int, help='ID of the poll message to fetch')
+    parser.add_argument('--poll_id', type=int, help='ID of the poll in message to fetch')
     args = parser.parse_args()
 
-    # Receiving a survey depending on the arguments passed
-    if args.msg_id:
-        logger.info(f"Fetching poll by message ID: {args.msg_id}")
-        msg = await fetch_poll_by_id(args.msg_id)
+    if args.poll_id:
+        poll_msg = await fetch_poll_by_poll_id(args.poll_id)
     else:
-        logger.info("Fetching last poll in chat")
-        msg = await fetch_last_poll()
+        poll_msg = await fetch_last_poll()
 
-    if not msg:
+    if not poll_msg:
         logger.error("No polls found in chat.")
         return
 
-    msg = await fetch_last_poll()
-    if not msg:
-        logger.error("No polls found in chat.")
-        return
-
-    poll = msg.media.poll
+    poll = poll_msg.media.poll
     if not poll.public_voters:
         logger.error("The poll is not public — you cannot get a list of those who voted.")
         return
 
-    poll_date = msg.date
+    poll_date = poll_msg.date
     question = poll.question.text if hasattr(poll.question, 'text') else poll.question
 
     me = await client.get_me()
-    need_to_vote = not await has_user_voted(msg, me.id)
+    need_to_vote = not await has_user_voted(poll_msg, me.id)
 
     # Voting logic
     if need_to_vote:
@@ -145,8 +160,8 @@ async def main():
             first_option_bytes = first_option
 
         await client(SendVoteRequest(
-            peer=msg.peer_id,
-            msg_id=msg.id,
+            peer=poll_msg.peer_id,
+            msg_id=poll_msg.id,
             options=[first_option_bytes]
         ))
         logger.info("Temporarily voted to access poll results")
@@ -165,7 +180,7 @@ async def main():
         else:
             option_bytes = raw
 
-        voters = await fetch_voters_for_option(msg, option_bytes)
+        voters = await fetch_voters_for_option(poll_msg, option_bytes)
         filtered_voters = [user for user in voters if user.id != me.id or not need_to_vote]
 
         voter_names = []
@@ -183,8 +198,8 @@ async def main():
 
     if need_to_vote:
         await client(SendVoteRequest(
-            peer=msg.peer_id,
-            msg_id=msg.id,
+            peer=poll_msg.peer_id,
+            msg_id=poll_msg.id,
             options=[]
         ))
         logger.info("Temporary vote removed")
@@ -193,7 +208,9 @@ async def main():
     saved_path = saver.save_as_json(poll_date, poll_data, subfolder="Polls")
     logger.info(f"Poll results saved to: {saved_path}")
 
-    print(f"\n{poll_date:%Y-%m-%d %H:%M:%S}")
+    # Выводим ID сообщения перед результатами
+    print(f"\nPoll message ID: {poll_msg.id}")
+    print(f"{poll_date:%Y-%m-%d %H:%M:%S}")
     print(f"\n{question}\n")
 
     for option_key, data in poll_data.items():

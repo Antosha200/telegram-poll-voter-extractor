@@ -13,7 +13,7 @@ def main():
     here = os.path.dirname(os.path.abspath(__file__))
     session_checker = os.path.join(here, 'check_session.py')
     parser = argparse.ArgumentParser()
-    parser.add_argument('--msg_id', type=int, help='ID of the poll message to fetch')
+    parser.add_argument('--poll_id', type=int, help='ID of the poll in message to fetch')
     args = parser.parse_args()
     try:
         result = subprocess.run(
@@ -64,8 +64,8 @@ def main():
         logger.info("Active session, no new connection required")
         try:
             cmd = [sys.executable, get_poll]
-            if args.msg_id:
-                cmd.extend(['--msg_id', str(args.msg_id)])
+            if args.poll_id:
+                cmd.extend(['--poll_id', str(args.poll_id)])
 
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
