@@ -63,7 +63,7 @@ async def fetch_poll_by_poll_id(poll_id: int):
     try:
         async for msg in client.iter_messages(
                 entity=cfg['chat_username'],
-                limit=200  # Ограничение на количество проверяемых сообщений
+                limit=200  # Limit on the number of messages checked
         ):
             if (
                     isinstance(msg.media, MessageMediaPoll) and
