@@ -76,18 +76,13 @@ cd Action
 ```bash
 python start.py
 ```
-2. Running with the `msg_id` parameter. Will return the poll that has actual message id
+2. Running with the `poll_id` parameter. Will return the poll that has actual id
 ```bash
 cd Action
 ```
 ```bash
-python start.py --msg_id 789012
+python start.py --poll_id 789012
 ```
-Find which id to use you can from Telegram web URL
-```bash
-https://web.telegram.org/k/#-1234567890
-```
-
 ## 🎯 Where to find the results?
 All results you can find in `Documents/Results` folder in JSON format.
 You also can find logs in `Logs` folder
