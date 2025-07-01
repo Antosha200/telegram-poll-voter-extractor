@@ -55,9 +55,9 @@ async def fetch_poll_by_id(msg_id: int):
 """
 async def fetch_poll_by_poll_id(poll_id: int):
     """
-    Получает опрос по уникальному poll_id вместо message_id
-    :param poll_id: ID опроса (поле poll.id в MessageMediaPoll)
-    :return: Message объект или None
+   Gets a poll by a unique poll_id instead of message_id 
+   :param poll_id: Poll ID (poll.id field in MessageMediaPoll) 
+   :return: Message object or None
     """
     await client.start()
     try:
