@@ -208,7 +208,7 @@ async def main():
     saved_path = saver.save_as_json(poll_date, poll_data, subfolder="Polls")
     logger.info(f"Poll results saved to: {saved_path}")
 
-    # Выводим ID сообщения перед результатами
+    # Display the message ID before the results
     print(f"\nPoll message ID: {poll_msg.id}")
     print(f"{poll_date:%Y-%m-%d %H:%M:%S}")
     print(f"\n{question}\n")
